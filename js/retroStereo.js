@@ -4,8 +4,6 @@ export class RetroStereo {
     constructor() {
         // Create main group for the stereo
         this.group = new THREE.Group();
-        this.group.position.set(0, 1.5, -3);
-        this.group.rotation.x = -0.2;
 
         // Create stereo frame
         const frame = new THREE.Mesh(
