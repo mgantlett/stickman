@@ -178,7 +178,7 @@ window.addEventListener('load', async () => {
     document.getElementById('micBtn').addEventListener('click', async () => {
         const deviceId = audioDevices.value;
         try {
-            await demo.audioAnalyzer.start(null, deviceId);
+            await demo.audioAnalyzer.init(null, deviceId);
             overlay.style.opacity = '0';
             setTimeout(() => overlay.style.display = 'none', 1000);
         } catch (error) {
@@ -280,7 +280,7 @@ window.addEventListener('load', async () => {
     document.getElementById('micBtn').addEventListener('click', async () => {
         try {
             const deviceId = audioDevices.value;
-            await demo.audioAnalyzer.start(null, deviceId);
+            await demo.audioAnalyzer.init(null, deviceId);
             overlay.style.opacity = '0';
             setTimeout(() => overlay.remove(), 1000);
         } catch (error) {
