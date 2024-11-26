@@ -169,13 +169,24 @@ window.addEventListener('load', async () => {
         <div style="margin-bottom: 15px; font-size: 16px; opacity: 0.8;">
             Choose your audio source to begin the visualization:
         </div>
-        <div style="display: flex; gap: 20px; justify-content: center;">
-            <button id="micBtn" style="background: cyan; color: black; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
-                🎤 Use Microphone
-            </button>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <select id="audioDevices" style="background: rgba(0,0,0,0.7); color: cyan; border: 1px solid cyan; padding: 10px; border-radius: 5px; cursor: pointer;">
+                    <option value="">Loading audio devices...</option>
+                </select>
+                <button id="micBtn" style="background: cyan; color: black; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                    🎤 Use Selected Input
+                </button>
+            </div>
             <input type="file" id="audioFile" accept="audio/*" style="display: none;">
             <button id="fileBtn" style="background: cyan; color: black; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
                 🎵 Upload Audio File
+            </button>
+        </div>
+        <div style="margin-top: 15px;">
+            <input type="text" id="audioUrl" placeholder="Enter audio URL" style="padding: 10px; width: 80%; margin-right: 10px; border-radius: 5px; border: 1px solid cyan; background: rgba(0,0,0,0.7); color: cyan;">
+            <button id="urlBtn" style="background: cyan; color: black; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                🌐 Load URL
             </button>
         </div>
         <div style="margin-top: 15px; font-size: 14px; opacity: 0.7;">
@@ -203,10 +214,32 @@ window.addEventListener('load', async () => {
         }, 5000);
     };
 
-    // Handle microphone input
+    // Function to update audio device list
+    const updateAudioDevices = async () => {
+        try {
+            const devices = await demo.audioAnalyzer.getAudioDevices();
+            const currentDevice = audioDevices.value;
+            audioDevices.innerHTML = devices.map(device => 
+                `<option value="${device.id}" ${device.id === currentDevice ? 'selected' : device.default ? 'selected' : ''}>${device.label}</option>`
+            ).join('');
+        } catch (error) {
+            showError(error.message);
+            audioDevices.innerHTML = '<option value="">No audio devices available</option>';
+        }
+    };
+
+    // Monitor device changes
+    navigator.mediaDevices.addEventListener('devicechange', updateAudioDevices);
+
+    // Get audio devices select element and do initial population
+    const audioDevices = document.getElementById('audioDevices');
+    await updateAudioDevices();
+
+    // Handle audio input selection
     document.getElementById('micBtn').addEventListener('click', async () => {
         try {
-            await demo.audioAnalyzer.start();
+            const deviceId = audioDevices.value;
+            await demo.audioAnalyzer.start(null, deviceId);
             overlay.style.opacity = '0';
             setTimeout(() => overlay.remove(), 1000);
         } catch (error) {
@@ -231,6 +264,23 @@ window.addEventListener('load', async () => {
                 showError(error.message);
                 fileInput.value = ''; // Reset file input
             }
+        }
+    });
+
+    // Handle URL input
+    document.getElementById('urlBtn').addEventListener('click', async () => {
+        const audioUrl = document.getElementById('audioUrl').value.trim();
+        if (!audioUrl) {
+            showError('Please enter a valid audio URL');
+            return;
+        }
+        try {
+            await demo.audioAnalyzer.start(audioUrl);
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 1000);
+        } catch (error) {
+            showError(error.message);
+            document.getElementById('audioUrl').value = ''; // Reset URL input
         }
     });
 });
