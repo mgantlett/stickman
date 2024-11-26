@@ -32,6 +32,14 @@ class DemoScene {
     }
     
     async initEffects() {
+        // Add ambient and directional lights
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        this.scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 5);
+        this.scene.add(directionalLight);
+
         // Create and add the retro stereo display in lower left corner
         this.retroStereo = new RetroStereo();
         // Position in lower left corner
@@ -158,6 +166,25 @@ window.addEventListener('load', async () => {
     const demo = new DemoScene();
     // Initialize text effect after scene is ready
     demo.textEffect = new TextEffect(demo.scene);
+
+    // Populate audio devices dropdown
+    const devices = await demo.audioAnalyzer.getAudioDevices();
+    const audioDevices = document.getElementById('audioDevices');
+    audioDevices.innerHTML = devices.map(device => 
+        `<option value="${device.id}">${device.label}</option>`
+    ).join('');
+
+    // Handle microphone button click
+    document.getElementById('micBtn').addEventListener('click', async () => {
+        const deviceId = audioDevices.value;
+        try {
+            await demo.audioAnalyzer.start(null, deviceId);
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 1000);
+        } catch (error) {
+            alert(error.message);
+        }
+    });
     
     // Create audio control overlay
     const overlay = document.createElement('div');
