@@ -145,7 +145,7 @@ window.addEventListener('load', async () => {
     // Initialize text effect after scene is ready
     demo.textEffect = new TextEffect(demo.scene);
     
-    // Start audio visualization on user interaction
+    // Create audio control overlay
     const overlay = document.createElement('div');
     overlay.style.cssText = `
         position: fixed;
@@ -156,17 +156,81 @@ window.addEventListener('load', async () => {
         font-family: monospace;
         font-size: 24px;
         text-align: center;
-        pointer-events: none;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
         text-shadow: 0 0 10px cyan;
         transition: opacity 1s;
     `;
-    overlay.textContent = 'Click anywhere to start audio';
+    
+    const content = document.createElement('div');
+    content.innerHTML = `
+        <div style="margin-bottom: 20px;">Audio Visualizer</div>
+        <div style="margin-bottom: 15px; font-size: 16px; opacity: 0.8;">
+            Choose your audio source to begin the visualization:
+        </div>
+        <div style="display: flex; gap: 20px; justify-content: center;">
+            <button id="micBtn" style="background: cyan; color: black; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                🎤 Use Microphone
+            </button>
+            <input type="file" id="audioFile" accept="audio/*" style="display: none;">
+            <button id="fileBtn" style="background: cyan; color: black; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px;">
+                🎵 Upload Audio File
+            </button>
+        </div>
+        <div style="margin-top: 15px; font-size: 14px; opacity: 0.7;">
+            Supported formats: MP3, WAV, OGG
+        </div>
+    `;
+    overlay.appendChild(content);
     document.body.appendChild(overlay);
 
-    document.addEventListener('click', async () => {
-        await demo.audioAnalyzer.start();
-        // Fade out and remove overlay
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 1000);
-    }, { once: true });
+    // Create error message element
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = `
+        color: #ff4444;
+        margin-top: 15px;
+        font-size: 16px;
+        display: none;
+    `;
+    content.appendChild(errorMsg);
+
+    const showError = (message) => {
+        errorMsg.textContent = message;
+        errorMsg.style.display = 'block';
+        setTimeout(() => {
+            errorMsg.style.display = 'none';
+        }, 5000);
+    };
+
+    // Handle microphone input
+    document.getElementById('micBtn').addEventListener('click', async () => {
+        try {
+            await demo.audioAnalyzer.start();
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 1000);
+        } catch (error) {
+            showError(error.message);
+        }
+    });
+
+    // Handle file upload
+    const fileInput = document.getElementById('audioFile');
+    document.getElementById('fileBtn').addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                await demo.audioAnalyzer.start(file);
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 1000);
+            } catch (error) {
+                showError(error.message);
+                fileInput.value = ''; // Reset file input
+            }
+        }
+    });
 });
