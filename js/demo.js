@@ -2,6 +2,8 @@
 import * as THREE from 'https://unpkg.com/three@0.157.0/build/three.module.js';
 import { TextEffect } from './textEffect.js';
 import { AudioAnalyzer } from './audioAnalyzer.js';
+import { RetroStereo } from './retroStereo.js';
+
 class DemoScene {
     constructor() {
         this.canvas = document.getElementById('demoCanvas');
@@ -17,7 +19,7 @@ class DemoScene {
         // Setup scene and camera
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.z = 5;
+        this.camera.position.set(0, 1.0, 5); // Initial position to see both tunnel and stereo
         
         // Initialize effects
         this.initEffects();
@@ -30,6 +32,10 @@ class DemoScene {
     }
     
     async initEffects() {
+        // Create and add the retro stereo display
+        this.retroStereo = new RetroStereo();
+        this.scene.add(this.retroStereo.group);
+
         // Create a retro-style tunnel effect
         const tunnelGeometry = new THREE.CylinderGeometry(1, 2, 12, 32, 1, true);
         
@@ -109,6 +115,9 @@ class DemoScene {
         // Get audio data
         const audioData = this.audioAnalyzer.getFrequencyData();
         if (audioData) {
+            // Update RetroStereo visualization
+            this.retroStereo.update(audioData);
+            
             // Update tunnel effect with audio
             this.tunnel.material.uniforms.audioIntensity.value = audioData.bass;
             
@@ -125,10 +134,11 @@ class DemoScene {
         this.particles.rotation.y = this.time * 0.1;
         this.particles.rotation.x = this.time * 0.05;
         
-        // Dynamic camera movement
-        this.camera.position.x = Math.sin(this.time * 0.5) * 0.5;
-        this.camera.position.y = Math.cos(this.time * 0.3) * 0.3;
-        this.camera.lookAt(0, 0, -2);
+        // Subtle camera movement
+        this.camera.position.x = Math.sin(this.time * 0.2) * 0.3;
+        this.camera.position.y = Math.cos(this.time * 0.15) * 0.2 + 1.0; // Raised position to see both tunnel and stereo
+        this.camera.position.z = 5;
+        this.camera.lookAt(0, 0.5, -2);
         
         // Update text effect if initialized with audio data
         if (this.textEffect) {
