@@ -1,5 +1,5 @@
 // Modern WebGL Demo Scene Engine
-import * as THREE from 'https://cdn.skypack.dev/three@0.157.0?min';
+import * as THREE from 'https://cdn.skypack.dev/three@0.157.0';
 import { TextEffect } from './textEffect.js';
 import { AudioAnalyzer } from './audioAnalyzer.js';
 class DemoScene {
