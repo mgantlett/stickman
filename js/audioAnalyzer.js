@@ -10,7 +10,9 @@ export class AudioAnalyzer {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
-            this.analyser.fftSize = 256;
+            this.analyser.fftSize = 2048; // Increased for better frequency resolution
+            this.analyser.smoothingTimeConstant = 0.8; // Smoothing for visualization
+            this.timeDataArray = new Uint8Array(this.analyser.frequencyBinCount); // For oscilloscope
             
             if (!audioSource) {
                 // Create audio input from selected device or default microphone
@@ -63,18 +65,27 @@ export class AudioAnalyzer {
     getFrequencyData() {
         if (!this.initialized) return null;
         
+        // Get frequency data
         this.analyser.getByteFrequencyData(this.dataArray);
         
-        // Calculate different frequency bands
-        const bass = this.getAverageFrequency(0, 3);
-        const mid = this.getAverageFrequency(4, 10);
-        const treble = this.getAverageFrequency(11, 20);
+        // Get time domain data for oscilloscope
+        this.analyser.getByteTimeDomainData(this.timeDataArray);
+        
+        // Calculate frequency bands (adjusted for larger FFT size)
+        const bass = this.getAverageFrequency(0, 10);      // 0-200Hz
+        const lowMid = this.getAverageFrequency(11, 25);   // 200-500Hz
+        const mid = this.getAverageFrequency(26, 50);      // 500-1kHz
+        const highMid = this.getAverageFrequency(51, 100); // 1kHz-2kHz
+        const treble = this.getAverageFrequency(101, 200); // 2kHz-4kHz
         
         return {
             bass: bass / 255,
+            lowMid: lowMid / 255,
             mid: mid / 255,
+            highMid: highMid / 255,
             treble: treble / 255,
-            raw: Array.from(this.dataArray)
+            raw: Array.from(this.dataArray),
+            timeData: Array.from(this.timeDataArray)
         };
     }
 
