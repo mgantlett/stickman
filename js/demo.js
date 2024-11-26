@@ -32,8 +32,12 @@ class DemoScene {
     }
     
     async initEffects() {
-        // Create and add the retro stereo display
+        // Create and add the retro stereo display in lower left corner
         this.retroStereo = new RetroStereo();
+        // Position in lower left corner
+        this.retroStereo.group.position.set(-1.5, -1, -2);
+        // Rotate slightly for better visibility
+        this.retroStereo.group.rotation.set(0, Math.PI * 0.15, 0);
         this.scene.add(this.retroStereo.group);
 
         // Create a retro-style tunnel effect
