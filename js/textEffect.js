@@ -1,5 +1,5 @@
 // Retro Text Effect with Scanlines and Glow
-import * as THREE from 'https://cdn.skypack.dev/three@0.157.0?min';
+import * as THREE from 'https://cdn.skypack.dev/three@0.157.0';
 
 export class TextEffect {
     constructor(scene, text = "DEMO SCENE 2024") {
