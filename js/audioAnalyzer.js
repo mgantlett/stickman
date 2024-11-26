@@ -6,15 +6,18 @@ export class AudioAnalyzer {
         this.audioContext = null;
     }
 
-    async init(audioSource = null) {
+    async init(audioSource = null, deviceId = null) {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 256;
             
             if (!audioSource) {
-                // Create audio input from microphone
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Create audio input from selected device or default microphone
+                const constraints = {
+                    audio: deviceId ? { deviceId: { exact: deviceId } } : true
+                };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 const source = this.audioContext.createMediaStreamSource(stream);
                 source.connect(this.analyser);
             } else if (audioSource instanceof File) {
@@ -83,12 +86,27 @@ export class AudioAnalyzer {
         return sum / (endIndex - startIndex + 1);
     }
 
-    async start(audioSource = null) {
+    async getAudioDevices() {
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true }); // Request permission first
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            return devices.filter(device => device.kind === 'audioinput').map(device => ({
+                id: device.deviceId,
+                label: device.label || `Audio Input ${device.deviceId.slice(0, 5)}...`,
+                default: device.deviceId === 'default'
+            }));
+        } catch (error) {
+            console.error('Failed to enumerate audio devices:', error);
+            throw new Error('Could not access audio devices. Please check permissions and try again.');
+        }
+    }
+
+    async start(audioSource = null, deviceId = null) {
         if (this.audioContext?.state === 'suspended') {
             await this.audioContext.resume();
         }
-        if (!this.initialized || audioSource) {
-            await this.init(audioSource);
+        if (!this.initialized || audioSource || deviceId) {
+            await this.init(audioSource, deviceId);
         }
     }
 }
